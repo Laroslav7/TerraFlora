@@ -11,7 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
-/** Main menu for the test version 0.0.1. */
+/** Main menu for the test version 0.0.2. */
 public class MainMenuScreen implements Screen {
     private final TerraFloraGame game;
 
@@ -37,9 +37,12 @@ public class MainMenuScreen implements Screen {
         logoTexture = new Texture(Gdx.files.internal("TerraFlora.png"));
         backgroundTexture = new Texture(Gdx.files.internal("FieldBackground.png"));
 
+        logoTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        backgroundTexture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
         TextButton playButton = new TextButton("Играть", skin);
         playButton.setSize(280, 80);
-        playButton.setPosition((viewport.getWorldWidth() - playButton.getWidth()) / 2f, 180f);
+        playButton.setPosition((viewport.getWorldWidth() - playButton.getWidth()) / 2f, 130f);
         playButton.addListener(event -> {
             if (!playButton.isPressed()) {
                 return false;
@@ -60,11 +63,12 @@ public class MainMenuScreen implements Screen {
         game.getBatch().begin();
         game.getBatch().draw(backgroundTexture, 0, 0, viewport.getWorldWidth(), viewport.getWorldHeight());
 
-        float logoWidth = 620;
-        float logoHeight = 250;
+        float logoAspect = (float) logoTexture.getWidth() / logoTexture.getHeight();
+        float logoWidth = 780;
+        float logoHeight = logoWidth / logoAspect;
         game.getBatch().draw(logoTexture,
                 (viewport.getWorldWidth() - logoWidth) / 2f,
-                viewport.getWorldHeight() - logoHeight - 80,
+                viewport.getWorldHeight() - logoHeight - 55,
                 logoWidth,
                 logoHeight);
         game.getBatch().end();

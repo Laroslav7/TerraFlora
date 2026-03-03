@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -17,7 +18,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import java.util.EnumMap;
 import java.util.Map;
 
-/** Simple playable world for TerraFlora 0.0.1. */
+/** Simple playable world for TerraFlora 0.0.2. */
 public class WorldScreen implements Screen {
     private static final int WORLD_WIDTH = 140;
     private static final int WORLD_HEIGHT = 36;
@@ -32,7 +33,7 @@ public class WorldScreen implements Screen {
 
     private final TerraFloraGame game;
     private final TileType[][] world = new TileType[WORLD_WIDTH][WORLD_HEIGHT];
-    private final Rectangle playerBounds = new Rectangle(200, 500, PLAYER_WIDTH, PLAYER_HEIGHT);
+    private final Rectangle playerBounds = new Rectangle(200, 0, PLAYER_WIDTH, PLAYER_HEIGHT);
     private final Vector2 velocity = new Vector2();
     private final Map<ItemType, Integer> inventory = new EnumMap<>(ItemType.class);
 
@@ -49,6 +50,7 @@ public class WorldScreen implements Screen {
     private Texture treeTexture;
     private Texture pickaxeTexture;
     private Texture swordTexture;
+    private Texture hotbarTexture;
     private Texture whitePixel;
     private BitmapFont font;
 
@@ -71,24 +73,51 @@ public class WorldScreen implements Screen {
         pickaxeTexture = new Texture(Gdx.files.internal("TerraPickax.png"));
         swordTexture = new Texture(Gdx.files.internal("TerraSword.png"));
 
+        if (Gdx.files.internal("assets/ui/FirstHotBar.png").exists()) {
+            hotbarTexture = new Texture(Gdx.files.internal("assets/ui/FirstHotBar.png"));
+            hotbarTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        }
+
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.WHITE);
         pixmap.fill();
         whitePixel = new Texture(pixmap);
         pixmap.dispose();
 
-        font = new BitmapFont();
-        font.getData().setScale(1.15f);
+        playerTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        grassTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        dirtTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        treeTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pickaxeTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        swordTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+
+        font = createUiFont();
 
         inventory.put(ItemType.WOOD, 0);
         inventory.put(ItemType.DIRT, 0);
 
         createWorld();
+        playerBounds.y = TILE_SIZE * 6;
+    }
+
+    private BitmapFont createUiFont() {
+        if (!Gdx.files.internal("assets/ui/Newfont.otf").exists()) {
+            return new BitmapFont();
+        }
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("assets/ui/Newfont.otf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = 24;
+        parameter.characters = FreeTypeFontGenerator.DEFAULT_CHARS +
+                "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ" +
+                "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
+        BitmapFont generated = generator.generateFont(parameter);
+        generator.dispose();
+        return generated;
     }
 
     private void createWorld() {
-        int surface = 9;
-
+        int surface = 6;
         for (int x = 0; x < WORLD_WIDTH; x++) {
             for (int y = 0; y < WORLD_HEIGHT; y++) {
                 if (y < surface - 1) {
@@ -121,40 +150,32 @@ public class WorldScreen implements Screen {
         update(delta);
 
         ScreenUtils.clear(0.58f, 0.75f, 0.96f, 1f);
-
         game.getBatch().setProjectionMatrix(camera.combined);
         game.getBatch().begin();
 
         game.getBatch().draw(backgroundTexture,
                 camera.position.x - viewport.getWorldWidth() / 2f,
-                camera.position.y - viewport.getWorldHeight() / 2f,
+                0,
                 viewport.getWorldWidth(),
                 viewport.getWorldHeight());
 
         renderWorld();
-        game.getBatch().draw(playerTexture, playerBounds.x, playerBounds.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+        game.getBatch().draw(playerTexture, MathUtils.floor(playerBounds.x), MathUtils.floor(playerBounds.y), PLAYER_WIDTH, PLAYER_HEIGHT);
         renderUi();
-
         game.getBatch().end();
     }
 
     private void update(float delta) {
-        handleInput(delta);
-
+        handleInput();
         velocity.y += GRAVITY * delta;
         moveWithCollisions(delta);
-
         actionCooldown = Math.max(0f, actionCooldown - delta);
 
-        camera.position.set(
-                playerBounds.x + playerBounds.width / 2f,
-                Math.max(playerBounds.y + playerBounds.height / 2f, viewport.getWorldHeight() / 2f),
-                0f
-        );
+        camera.position.set(playerBounds.x + playerBounds.width / 2f, viewport.getWorldHeight() / 2f, 0f);
         camera.update();
     }
 
-    private void handleInput(float delta) {
+    private void handleInput() {
         if (Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             velocity.x = -MOVE_SPEED;
         } else if (Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
@@ -183,12 +204,9 @@ public class WorldScreen implements Screen {
 
     private void breakTileAtMouse() {
         Vector2 worldPos = viewport.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
-
         float px = playerBounds.x + playerBounds.width / 2f;
         float py = playerBounds.y + playerBounds.height / 2f;
-        if (Vector2.dst(px, py, worldPos.x, worldPos.y) > TILE_SIZE * 3f) {
-            return;
-        }
+        if (Vector2.dst(px, py, worldPos.x, worldPos.y) > TILE_SIZE * 3f) return;
 
         int tileX = MathUtils.floor(worldPos.x / TILE_SIZE);
         int tileY = MathUtils.floor(worldPos.y / TILE_SIZE);
@@ -230,11 +248,8 @@ public class WorldScreen implements Screen {
                 if (isSolid(x, y)) {
                     Rectangle tileRect = new Rectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     if (playerBounds.overlaps(tileRect)) {
-                        if (velocity.x > 0) {
-                            playerBounds.x = tileRect.x - playerBounds.width;
-                        } else if (velocity.x < 0) {
-                            playerBounds.x = tileRect.x + tileRect.width;
-                        }
+                        if (velocity.x > 0) playerBounds.x = tileRect.x - playerBounds.width;
+                        else if (velocity.x < 0) playerBounds.x = tileRect.x + tileRect.width;
                     }
                 }
             }
@@ -254,7 +269,7 @@ public class WorldScreen implements Screen {
                     if (playerBounds.overlaps(tileRect)) {
                         if (velocity.y > 0) {
                             playerBounds.y = tileRect.y - playerBounds.height;
-                        } else if (velocity.y <= 0) {
+                        } else {
                             playerBounds.y = tileRect.y + tileRect.height;
                             onGround = true;
                         }
@@ -276,12 +291,11 @@ public class WorldScreen implements Screen {
                     case GRASS -> tileTexture = grassTexture;
                     case DIRT -> tileTexture = dirtTexture;
                     case WOOD -> tileTexture = treeTexture;
-                    case AIR -> {
-                    }
+                    case AIR -> { }
                 }
 
                 if (tileTexture != null) {
-                    game.getBatch().draw(tileTexture, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    game.getBatch().draw(tileTexture, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE + 1f, TILE_SIZE + 1f);
                 }
             }
         }
@@ -290,34 +304,37 @@ public class WorldScreen implements Screen {
     private void renderUi() {
         float left = camera.position.x - viewport.getWorldWidth() / 2f + 20f;
         float top = camera.position.y + viewport.getWorldHeight() / 2f - 20f;
-
-        font.draw(game.getBatch(), "TerraFlora 0.0.1", left, top);
+        font.draw(game.getBatch(), "TerraFlora 0.0.2", left, top);
         font.draw(game.getBatch(), "WASD/Стрелки: ходить, Space: прыжок, ЛКМ: ломать", left, top - 28f);
-        font.draw(game.getBatch(), "1: Кирка, 2: Меч, Esc: меню", left, top - 52f);
+        font.draw(game.getBatch(), "1: Кирка, 2: Меч, Esc: меню", left, top - 56f);
 
-        float hotbarY = camera.position.y - viewport.getWorldHeight() / 2f + 24f;
-        float firstSlotX = camera.position.x - 90f;
+        float hotbarY = camera.position.y - viewport.getWorldHeight() / 2f + 22f;
+        float hotbarX = camera.position.x - 128f;
 
-        drawSlot(firstSlotX, hotbarY, selectedTool == ItemType.PICKAXE);
-        game.getBatch().draw(pickaxeTexture, firstSlotX + 12, hotbarY + 12, 40, 40);
+        if (hotbarTexture != null) {
+            game.getBatch().draw(hotbarTexture, hotbarX, hotbarY, 256, 64);
+        } else {
+            drawFallbackHotbar(hotbarX, hotbarY);
+        }
 
-        drawSlot(firstSlotX + 74, hotbarY, selectedTool == ItemType.SWORD);
-        game.getBatch().draw(swordTexture, firstSlotX + 86, hotbarY + 12, 40, 40);
+        game.getBatch().draw(pickaxeTexture, hotbarX + 12, hotbarY + 12, 40, 40);
+        game.getBatch().draw(swordTexture, hotbarX + 76, hotbarY + 12, 40, 40);
 
-        font.draw(game.getBatch(), "Дерево: " + inventory.get(ItemType.WOOD), left, top - 82f);
-        font.draw(game.getBatch(), "Земля: " + inventory.get(ItemType.DIRT), left, top - 106f);
+        font.draw(game.getBatch(), "Дерево: " + inventory.get(ItemType.WOOD), left, top - 86f);
+        font.draw(game.getBatch(), "Земля: " + inventory.get(ItemType.DIRT), left, top - 114f);
     }
 
-    private void drawSlot(float x, float y, boolean selected) {
-        Color color = selected ? new Color(0.95f, 0.84f, 0.32f, 0.95f) : new Color(0.18f, 0.19f, 0.22f, 0.85f);
-        game.getBatch().setColor(color);
-        game.getBatch().draw(whitePixel, x, y, 64, 64);
-        game.getBatch().setColor(Color.WHITE);
+    private void drawFallbackHotbar(float hotbarX, float hotbarY) {
+        for (int i = 0; i < 4; i++) {
+            boolean selected = (i == 0 && selectedTool == ItemType.PICKAXE) || (i == 1 && selectedTool == ItemType.SWORD);
+            game.getBatch().setColor(selected ? new Color(0.9f, 0.75f, 0.25f, 1f) : new Color(0.16f, 0.18f, 0.22f, 0.9f));
+            game.getBatch().draw(whitePixel, hotbarX + i * 64f, hotbarY, 62, 62);
+            game.getBatch().setColor(Color.WHITE);
+        }
     }
 
     private boolean isSolid(int x, int y) {
-        if (!inBounds(x, y)) return false;
-        return world[x][y] != TileType.AIR;
+        return inBounds(x, y) && world[x][y] != TileType.AIR;
     }
 
     private boolean inBounds(int x, int y) {
@@ -350,21 +367,16 @@ public class WorldScreen implements Screen {
         treeTexture.dispose();
         pickaxeTexture.dispose();
         swordTexture.dispose();
+        if (hotbarTexture != null) hotbarTexture.dispose();
         whitePixel.dispose();
         font.dispose();
     }
 
     private enum TileType {
-        AIR,
-        GRASS,
-        DIRT,
-        WOOD
+        AIR, GRASS, DIRT, WOOD
     }
 
     private enum ItemType {
-        PICKAXE,
-        SWORD,
-        WOOD,
-        DIRT
+        PICKAXE, SWORD, WOOD, DIRT
     }
 }
