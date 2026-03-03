@@ -1,33 +1,62 @@
-# TerraFlщкзкora
+🌿 TerraFlora
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+TerraFlora is a 2.5D sandbox game built in Java.
+It blends the cozy farming vibes of Stardew Valley with the exploration and combat spirit of Terraria, while aiming to evolve into something bigger and more innovative over time.
 
-This project was generated with a template including simple application launchers and a main class extending `Game` that sets the first screen.
+⚠️ Current version: 0.0.1 (Test Build)
+This is an early experimental version.
 
-## Platforms
+🎮 Current Features (v0.0.1)
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+Play button → launches the world
 
-## Gradle
+Procedurally generated world inspired by Terraria-style terrain
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+Basic character movement (walk & jump)
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+Block-based world system (LEGO-style cube building)
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+Basic inventory system
+
+Ability to:
+
+Chop trees
+
+Break ground blocks
+
+This is just the foundation. The real vision starts growing from here.
+
+🌎 Planned Game Modes (Future Updates)
+🗺 Adventure Mode
+
+Inspired by Terraria but with a more structured world:
+
+Smaller but more detailed dungeons
+
+Castles and generated structures
+
+Exploration-focused gameplay
+
+Minecraft-level creativity — but refined
+
+🌾 Farm Mode
+
+A cozy farming experience similar to Stardew Valley:
+
+Build and expand your farm
+
+Grow crops
+
+Sell harvest for profit
+
+Develop your own peaceful ecosystem
+
+⚔ Battle Mode
+
+Hardcore survival combat:
+
+Boss fights
+
+Survival mechanics
+
+Terraria-style progression system
