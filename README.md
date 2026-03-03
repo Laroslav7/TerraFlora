@@ -4,7 +4,7 @@ TerraFlora is a 2.5D sandbox game built in Java.
 It blends the cozy farming vibes of Stardew Valley with the exploration and combat spirit of Terraria, while aiming to evolve into something bigger and more innovative over time.
 
 ⚠️ Current version: 0.0.1 (Test Build)
-This is an early experimental version.
+This is an \arly experimental version.
 
 🎮 Current Features (v0.0.1)
 
